@@ -9,4 +9,11 @@ app.use(express.json({limit:"20kb"}))   //.jason function basically reads the da
 app.use(express.urlencoded({extended:true,limit:"20kb"}))    //he express.urlencoded() middleware reads URL-encoded data (often sent from HTML forms) and converts it into a format that can be easily accessed in your Express application.
 app.use(express.static("public"))
 app.use(cookieParser())
+
+//routes import
+
+import userRouter from './routes/user.routes.js'
+
+app.use("/users",userRouter)
+
 export {app};
