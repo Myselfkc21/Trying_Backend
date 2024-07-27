@@ -6,12 +6,12 @@ import {Apiresponse} from "../utils/ApiResponse.js"
 import { upload } from "../middlewares/multer.middleware.js";
 const registerUser=asyncHandler(async(req,res)=>{
 
-    // get user details from frontend
-    // validation - not empty
-    // check if user already exists: username, email
-    // check for images, check for avatar
-    // upload them to cloudinary, avatar
-    // create user object - create entry in db
+    // get user details from frontend  *
+    // validation - not empty          *
+    // check if user already exists: username, email   *
+    // check for images, check for avatar              *
+    // upload them to cloudinary, avatar               *
+    // create user object - create entry in db         *
     // remove password and refresh token field from response
     // check for user creation
     // return res
@@ -31,14 +31,14 @@ const registerUser=asyncHandler(async(req,res)=>{
     //findOne is a mongoosee method, it takes 3 arguments-1.query Operators:$or,$and,$ne,$le
     //                                                    2.projection,in our case we are using fields/views
     //this findOne returs if a username or email is already present in the DB.
-    const existingUser=User.findOne({
+    const existingUser=await User.findOne({
         $or:[{username},{email}]
     })
 
     if(existingUser){
         throw new ApiError(400,"user Alreay exists")
     }
-    console.log(req.files)
+    console.log(req.files.avatar[0].path)
     //handling of files like avatar and cover images.
     const avatarLoaclPath=req.files?.avatar[0]?.path;
     const coverImageLoaclPath=req.files?.coverImage[0]?.path;
@@ -51,25 +51,26 @@ const registerUser=asyncHandler(async(req,res)=>{
     //url or address and map it to the user object
     const avatar=await uploadToCloudinary(avatarLoaclPath)
     const coverImage=await uploadToCloudinary(coverImageLoaclPath)
-console.log(avatar)
+console.log(avatar.url)
     if(!avatar){
         throw new ApiError("400","Avatar is required")
     }
 
     //creating the object for the daatabase
-    User.create({
+    const user=await User.create({
         fullname,
         avatar:avatar.url,
-        coverImage:coverImage?.url,
-        email:email,
-        password:password,
-        username:username.toLowercase()
+        coverImage:coverImage?.url || "",
+        email,
+        password,
+        username:username.toLowerCase()
     })
 //now we are retieving the user info, but we dont need the password and token so we ignored it
-    const createdUser=await User.findOne(
+// console.log(user);
+    const createdUser=await User.findById(user._id).select(
         "-password -refreshToken"
     )
-
+ 
     if(!createdUser){
        throw new ApiError(500,"something went wrong");
     }
